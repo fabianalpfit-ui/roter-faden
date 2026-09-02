@@ -1,7 +1,7 @@
 // Roter Faden — Service Worker
 // WICHTIG: Nach jeder Aenderung an index.html die Versionsnummer erhoehen,
 // sonst sehen bereits installierte Geraete die alte Fassung weiter.
-const CACHE = "roter-faden-v1";
+const CACHE = "roter-faden-v2";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (e) => {

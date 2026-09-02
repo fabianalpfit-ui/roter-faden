@@ -66,6 +66,11 @@ h1{font-size:1.05rem;font-weight:700;letter-spacing:-.01em;margin:0}
 .item.done .text{color:var(--ink-soft);text-decoration:line-through}
 .item.now .text{font-weight:700}
 
+.num{font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;
+     letter-spacing:.01em;margin-right:.45rem}
+.item.done .num{opacity:.6}
+.item.now .num{color:var(--thread);font-weight:700}
+
 .tag{display:inline-block;font-size:.64rem;font-weight:500;padding:.08rem .38rem;border-radius:3px;
      margin-left:.4rem;background:var(--linen-2);color:var(--ink-soft);vertical-align:middle}
 .tag.flag{background:var(--thread);color:var(--linen)}
@@ -263,7 +268,7 @@ function render(){
 
         const txt = document.createElement("button");
         txt.className = "text";
-        txt.innerHTML = item.t
+        txt.innerHTML = '<span class="num">'+item.id+'</span>' + item.t
           + (item.who ? '<span class="tag">'+item.who+'</span>' : "")
           + (item.flag ? '<span class="tag flag">jetzt dran</span>' : "");
         txt.onclick = () => { state.done[item.id] = !isDone; save(); render(); };
