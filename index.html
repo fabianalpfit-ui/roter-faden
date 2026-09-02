@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E9E5DC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Roter Faden">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Roter Faden</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23E9E5DC'/%3E%3Cpath d='M90 24 L90 156' stroke='%23C0102B' stroke-width='10' stroke-linecap='round'/%3E%3Ccircle cx='90' cy='52' r='16' fill='%236E0A1B'/%3E%3Ccircle cx='90' cy='128' r='14' fill='%23E9E5DC' stroke='%23CDC6B7' stroke-width='6'/%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700&family=Caveat:wght@600&display=swap');
+
+:root{
+  --linen:#E9E5DC; --linen-2:#DFDACE; --ink:#191713; --ink-soft:#6E6659;
+  --thread:#C0102B; --thread-deep:#6E0A1B; --rule:#CDC6B7;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--linen)}
+body{
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink); -webkit-font-smoothing:antialiased;
+  padding:0 0 4rem; padding-bottom:calc(4rem + env(safe-area-inset-bottom));
+}
+.wrap{max-width:44rem;margin:0 auto;padding:0 1.1rem}
+
+header{
+  position:sticky;top:0;z-index:20;background:var(--linen);
+  border-bottom:1px solid var(--rule);
+  padding:1rem 0 .7rem; padding-top:calc(1rem + env(safe-area-inset-top));
+}
+h1{font-size:1.05rem;font-weight:700;letter-spacing:-.01em;margin:0}
+.sub{font-size:.78rem;color:var(--ink-soft);margin:.15rem 0 .7rem}
+.bar{height:5px;background:var(--linen-2);border-radius:99px;overflow:hidden}
+.fill{height:100%;background:var(--thread);width:0;transition:width .35s ease}
+.meta{display:flex;justify-content:space-between;align-items:baseline;margin-top:.45rem}
+.count{font-size:.75rem;color:var(--ink-soft)}
+.jump{font-family:Caveat,cursive;font-size:1.15rem;color:var(--thread);
+      background:none;border:none;cursor:pointer;padding:0}
+
+.phase{margin-top:2.4rem}
+.phase-head{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.2rem}
+.phase-n{font-family:Caveat,cursive;font-size:1.3rem;color:var(--thread)}
+.phase-t{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;margin:0}
+.phase-c{font-size:.72rem;color:var(--ink-soft);margin-left:auto;white-space:nowrap}
+.group-t{font-size:.74rem;font-weight:500;color:var(--ink-soft);margin:1.5rem 0 .35rem;padding-left:2.1rem}
+
+.item{position:relative;padding:.55rem 0 .55rem 2.1rem}
+.item::before{content:"";position:absolute;left:.53rem;top:0;bottom:0;width:2px;background:var(--linen-2)}
+.item.done::before{background:var(--thread-deep)}
+.item.first::before{top:1.1rem}
+.item.last::before{bottom:auto;height:1.1rem}
+
+.knot{position:absolute;left:0;top:.78rem;width:1.15rem;height:1.15rem;border-radius:99px;
+      border:2px solid var(--rule);background:var(--linen);cursor:pointer;padding:0}
+.knot:focus-visible{outline:2px solid var(--thread);outline-offset:2px}
+.item.done .knot{background:var(--thread-deep);border-color:var(--thread-deep)}
+.item.now .knot{border-color:var(--thread);border-width:3px;box-shadow:0 0 0 4px rgba(192,16,43,.13)}
+
+.text{font-size:.93rem;line-height:1.45;cursor:pointer;background:none;border:none;
+      padding:0;text-align:left;color:var(--ink);font-family:inherit;width:100%}
+.item.done .text{color:var(--ink-soft);text-decoration:line-through}
+.item.now .text{font-weight:700}
+
+.tag{display:inline-block;font-size:.64rem;font-weight:500;padding:.08rem .38rem;border-radius:3px;
+     margin-left:.4rem;background:var(--linen-2);color:var(--ink-soft);vertical-align:middle}
+.tag.flag{background:var(--thread);color:var(--linen)}
+
+.actions{display:flex;gap:.8rem;margin-top:.35rem;flex-wrap:wrap}
+.link{font-size:.74rem;color:var(--thread);background:none;border:none;padding:0;cursor:pointer;
+      font-family:inherit;text-decoration:underline;text-underline-offset:2px}
+.note-read{font-family:Caveat,cursive;font-size:1.05rem;color:var(--thread-deep);margin-top:.2rem;line-height:1.3}
+.panel{margin-top:.5rem;padding:.7rem;background:var(--linen-2);border-radius:4px;
+       display:flex;flex-direction:column;gap:.5rem}
+.panel textarea,.panel input{font-family:inherit;font-size:16px;padding:.45rem .55rem;
+       border:1px solid var(--rule);border-radius:3px;background:var(--linen);color:var(--ink);width:100%}
+.panel textarea{resize:vertical;min-height:3.6rem}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.btn{font-family:inherit;font-size:.78rem;font-weight:500;padding:.45rem .75rem;border-radius:3px;
+     cursor:pointer;border:1px solid var(--thread-deep);background:var(--thread-deep);color:var(--linen)}
+.btn.ghost{background:none;color:var(--ink-soft);border-color:var(--rule)}
+.hint{font-size:.7rem;color:var(--ink-soft)}
+
+footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--rule);
+       display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.done-msg{font-family:Caveat,cursive;font-size:1.6rem;color:var(--thread);margin-top:2rem}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Roter Faden</h1>
+    <p class="sub">YouTube Automation, Schritt für Schritt</p>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="meta">
+      <span class="count" id="count"></span>
+      <button class="jump" id="jump">du bist hier ↓</button>
+    </div>
+  </header>
+  <main id="app"></main>
+  <footer>
+    <span class="count">Fortschritt bleibt auf diesem Gerät gespeichert.</span>
+    <div class="row">
+      <button class="btn ghost" id="export">Sichern</button>
+      <button class="btn ghost" id="reset">Zurücksetzen</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+const KEY = "roter-faden-v1";
+
+const PLAN = [
+ {phase:"1", title:"Grundlagen verstehen", groups:[
+  {title:"Wissen aneignen", items:[
+   {id:"1.1.1", t:"Videoarchiv einmal komplett ansehen"},
+   {id:"1.1.2", t:"Videoarchiv ein zweites Mal ansehen und Action Steps umsetzen"},
+   {id:"1.1.3", t:"Die wichtigsten Elemente und Metriken verstehen"}]},
+  {title:"Nische wählen", items:[
+   {id:"1.2.1", t:"Drei bis vier profitable Nischen finden"},
+   {id:"1.2.2", t:"Wettbewerbsanalyse pro Nische durchführen"},
+   {id:"1.2.3", t:"Nischen-Check Live Call besuchen", cal:"Nischen-Check Live Call"},
+   {id:"1.2.4", t:"1:1 Nischencall buchen", cal:"1:1 Nischencall mit Gottlebe"},
+   {id:"1.2.5", t:"Mindestens drei Nischen für den 1:1 Call vorbereiten"},
+   {id:"1.2.6", t:"Nische gemeinsam mit dem Experten entscheiden"},
+   {id:"1.2.7", t:"Direkt nach dem Call weitermachen", flag:true}]},
+  {title:"Channel-Setup", items:[
+   {id:"1.3.1", t:"Neuen Gmail-Account eröffnen"},
+   {id:"1.3.2", t:"YouTube-Channel mit diesem Account erstellen"},
+   {id:"1.3.3", t:"Channel nach Vorgaben einrichten"},
+   {id:"1.3.4", t:"Aussagekräftigen Channelnamen finden"},
+   {id:"1.3.5", t:"Banner und Logo gestalten lassen", who:"Dominik"},
+   {id:"1.3.6", t:"Banner und Logo hochladen"}]},
+  {title:"Kreatives Fundament", items:[
+   {id:"1.4.1", t:"Struktur für zukünftige Videos entwickeln"},
+   {id:"1.4.2", t:"Erste sechs Videoideen erarbeiten"},
+   {id:"1.4.3", t:"Videoideen zur Rückmeldung einreichen"}]}]},
+
+ {phase:"2", title:"Team aufbauen", groups:[
+  {title:"Teammitglieder finden", items:[
+   {id:"2.1.1", t:"UpWork-Account eröffnen"},
+   {id:"2.1.2", t:"Stellenausschreibung für den Video Editor posten"},
+   {id:"2.1.3", t:"Bezahlten Testauftrag an drei Finalisten vergeben"},
+   {id:"2.1.4", t:"Video Editor einstellen", who:"extern"},
+   {id:"2.1.5", t:"Thumbnails über Jarvis produzieren", who:"Jarvis"},
+   {id:"2.1.6", t:"Skripte über Jarvis produzieren", who:"Jarvis"},
+   {id:"2.1.7", t:"Eigene ElevenLabs-Stimme für Kanal 2 anlegen", who:"Jarvis"}]},
+  {title:"Team managen", items:[
+   {id:"2.2.1", t:"Trello- und Discord-Account eröffnen"},
+   {id:"2.2.2", t:"Workflow in Trello aufsetzen"},
+   {id:"2.2.3", t:"Briefing mit Regeln und Erwartungen bereitstellen"},
+   {id:"2.2.4", t:"Onboarding-Call durchführen", cal:"Team-Onboarding Video Editor"}]}]},
+
+ {phase:"3", title:"Videos produzieren", groups:[
+  {title:"Videoideen finden", items:[
+   {id:"3.1.1", t:"Feste Routine für Ideen und Titel etablieren"},
+   {id:"3.1.2", t:"Regelmässige Wettbewerbsanalyse aufsetzen"},
+   {id:"3.1.3", t:"Analyse des eigenen Kanals vertiefen"}]},
+  {title:"Erste Videos produzieren", items:[
+   {id:"3.2.1", t:"Erste sechs Videos nacheinander beauftragen"},
+   {id:"3.2.2", t:"Jedes Video prüfen und gezieltes Feedback geben"},
+   {id:"3.2.3", t:"Puffer von drei bis vier fertigen Videos aufbauen"},
+   {id:"3.2.4", t:"Erstes Video veröffentlichen"}]}]},
+
+ {phase:"4", title:"Wachstum", groups:[
+  {title:"Laufender Betrieb", items:[
+   {id:"4.1", t:"Regelmässig und konsistent veröffentlichen"},
+   {id:"4.2", t:"Live Calls für Rückmeldung nutzen", cal:"Live Call"},
+   {id:"4.3", t:"Expertenfeedback in Team und Inhalte einarbeiten"},
+   {id:"4.4", t:"Videos laufend optimieren"},
+   {id:"4.5", t:"Kommunikation im Team pflegen"},
+   {id:"4.6", t:"Wissen über YouTube Automation vertiefen"},
+   {id:"4.7", t:"Die Nische immer besser kennenlernen"}]}]}
+];
+
+const ALL = PLAN.flatMap(p => p.groups.flatMap(g => g.items));
+
+let state = {done:{}, notes:{}, dates:{}};
+try {
+  const raw = localStorage.getItem(KEY);
+  if (raw) state = Object.assign(state, JSON.parse(raw));
+} catch(e){}
+
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ alert("Konnte nicht speichern. Privates Surfen aktiv?"); }
+}
+
+function pad(n){ return String(n).padStart(2,"0"); }
+
+function ics(title, local, mins){
+  const s = new Date(local), e = new Date(s.getTime()+mins*60000);
+  const f = d => d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+"T"
+                +pad(d.getUTCHours())+pad(d.getUTCMinutes())+"00Z";
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Roter Faden//DE","CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT","UID:"+Date.now()+"@roterfaden","DTSTAMP:"+f(new Date()),
+    "DTSTART:"+f(s),"DTEND:"+f(e),"SUMMARY:"+title,
+    "DESCRIPTION:Aus dem Roten Faden übernommen.",
+    "BEGIN:VALARM","TRIGGER:-PT60M","ACTION:DISPLAY","DESCRIPTION:Erinnerung","END:VALARM",
+    "END:VEVENT","END:VCALENDAR"].join("\r\n");
+}
+
+function download(name, text, type){
+  const b = new Blob([text], {type:type});
+  const u = URL.createObjectURL(b);
+  const a = document.createElement("a");
+  a.href = u; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(u), 2000);
+}
+
+let openNote = null, openCal = null;
+
+function currentId(){
+  const n = ALL.find(i => !state.done[i.id]);
+  return n ? n.id : null;
+}
+
+function render(){
+  const cur = currentId();
+  const total = ALL.length;
+  const doneN = ALL.filter(i => state.done[i.id]).length;
+  const pct = Math.round(doneN/total*100);
+  document.getElementById("fill").style.width = pct+"%";
+  document.getElementById("count").textContent = doneN+" von "+total+" erledigt · "+pct+"%";
+  document.getElementById("jump").style.display = cur ? "" : "none";
+
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  PLAN.forEach(p => {
+    const items = p.groups.flatMap(g=>g.items);
+    const c = items.filter(i=>state.done[i.id]).length;
+
+    const sec = document.createElement("section");
+    sec.className = "phase";
+    sec.innerHTML = '<div class="phase-head"><span class="phase-n">'+p.phase+'</span>'
+      +'<h2 class="phase-t">'+p.title+'</h2><span class="phase-c">'+c+'/'+items.length+'</span></div>';
+
+    p.groups.forEach(g => {
+      const h = document.createElement("h3");
+      h.className = "group-t"; h.textContent = g.title;
+      sec.appendChild(h);
+
+      g.items.forEach((item, idx) => {
+        const isDone = !!state.done[item.id];
+        const isNow = item.id === cur;
+        const d = document.createElement("div");
+        d.className = "item" + (isDone?" done":"") + (isNow?" now":"")
+          + (idx===0?" first":"") + (idx===g.items.length-1?" last":"");
+        if (isNow) d.id = "current";
+
+        const knot = document.createElement("button");
+        knot.className = "knot";
+        knot.setAttribute("aria-label", isDone ? "Wieder öffnen" : "Erledigt");
+        knot.onclick = () => { state.done[item.id] = !isDone; save(); render(); };
+        d.appendChild(knot);
+
+        const txt = document.createElement("button");
+        txt.className = "text";
+        txt.innerHTML = item.t
+          + (item.who ? '<span class="tag">'+item.who+'</span>' : "")
+          + (item.flag ? '<span class="tag flag">jetzt dran</span>' : "");
+        txt.onclick = () => { state.done[item.id] = !isDone; save(); render(); };
+        d.appendChild(txt);
+
+        if (state.notes[item.id] && openNote !== item.id){
+          const n = document.createElement("div");
+          n.className = "note-read"; n.textContent = state.notes[item.id];
+          d.appendChild(n);
+        }
+
+        const acts = document.createElement("div");
+        acts.className = "actions";
+
+        const nb = document.createElement("button");
+        nb.className = "link";
+        nb.textContent = state.notes[item.id] ? "Notiz bearbeiten" : "Notiz";
+        nb.onclick = () => { openNote = openNote===item.id ? null : item.id; openCal = null; render(); };
+        acts.appendChild(nb);
+
+        if (item.cal){
+          const cb = document.createElement("button");
+          cb.className = "link";
+          cb.textContent = state.dates[item.id]
+            ? new Date(state.dates[item.id]).toLocaleString("de-CH",
+                {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})
+            : "Termin setzen";
+          cb.onclick = () => { openCal = openCal===item.id ? null : item.id; openNote = null; render(); };
+          acts.appendChild(cb);
+        }
+        d.appendChild(acts);
+
+        if (openNote === item.id){
+          const p2 = document.createElement("div");
+          p2.className = "panel";
+          const ta = document.createElement("textarea");
+          ta.value = state.notes[item.id] || "";
+          ta.placeholder = "Was hier wichtig ist…";
+          ta.oninput = e => { state.notes[item.id] = e.target.value; save(); };
+          const row = document.createElement("div");
+          row.className = "row";
+          const ok = document.createElement("button");
+          ok.className = "btn"; ok.textContent = "Fertig";
+          ok.onclick = () => { openNote = null; render(); };
+          row.appendChild(ok);
+          if (state.notes[item.id]){
+            const del = document.createElement("button");
+            del.className = "btn ghost"; del.textContent = "Löschen";
+            del.onclick = () => { delete state.notes[item.id]; save(); openNote=null; render(); };
+            row.appendChild(del);
+          }
+          p2.appendChild(ta); p2.appendChild(row);
+          d.appendChild(p2);
+        }
+
+        if (openCal === item.id){
+          const p3 = document.createElement("div");
+          p3.className = "panel";
+          const inp = document.createElement("input");
+          inp.type = "datetime-local";
+          inp.value = state.dates[item.id] || "";
+          inp.onchange = e => { state.dates[item.id] = e.target.value; save(); };
+          const row = document.createElement("div");
+          row.className = "row";
+          const go = document.createElement("button");
+          go.className = "btn"; go.textContent = "In den Kalender legen";
+          go.onclick = () => {
+            if (!state.dates[item.id]) return;
+            download(item.cal.replace(/[^a-z0-9]+/gi,"-").toLowerCase()+".ics",
+                     ics(item.cal, state.dates[item.id], 60), "text/calendar;charset=utf-8");
+            openCal = null; render();
+          };
+          const cl = document.createElement("button");
+          cl.className = "btn ghost"; cl.textContent = "Schliessen";
+          cl.onclick = () => { openCal = null; render(); };
+          row.appendChild(go); row.appendChild(cl);
+          const hint = document.createElement("span");
+          hint.className = "hint";
+          hint.textContent = "Lädt eine .ics-Datei — öffnet in Apple Kalender, Google und Outlook.";
+          p3.appendChild(inp); p3.appendChild(row); p3.appendChild(hint);
+          d.appendChild(p3);
+        }
+
+        sec.appendChild(d);
+      });
+    });
+    app.appendChild(sec);
+  });
+
+  if (!cur){
+    const m = document.createElement("p");
+    m.className = "done-msg";
+    m.textContent = "Alles abgearbeitet. Jetzt läuft der Kanal.";
+    app.appendChild(m);
+  }
+}
+
+document.getElementById("jump").onclick = () => {
+  const el = document.getElementById("current");
+  if (el) el.scrollIntoView({behavior:"smooth", block:"center"});
+};
+document.getElementById("reset").onclick = () => {
+  if (confirm("Wirklich allen Fortschritt löschen?")){
+    state = {done:{}, notes:{}, dates:{}}; save(); render();
+  }
+};
+document.getElementById("export").onclick = () => {
+  download("roter-faden-sicherung.json", JSON.stringify(state, null, 2), "application/json");
+};
+
+render();
+
+// Offline-Betrieb — Service Worker registrieren
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Roter Faden",
+  "short_name": "Roter Faden",
+  "description": "YouTube Automation, Schritt fuer Schritt abgearbeitet.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E9E5DC",
+  "theme_color": "#E9E5DC",
+  "lang": "de",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
