@@ -390,36 +390,118 @@ document.getElementById("reset").onclick = () => {
 document.getElementById("export").onclick = () => {
   download("roter-faden-sicherung.json", JSON.stringify(state, null, 2), "application/json");
 };
-function printNow(){
-  const alt = document.title;
-  const heute = new Date().toISOString().slice(0,10);
-  document.title = "Roter Faden — Kanal 2 — " + heute;
-  window.print();
-  document.title = alt;
+// PDF-Export ohne Systemdruck: window.print() erreicht die als App installierte
+// Seite auf iOS nicht (kein Browser-Rahmen dort). Darum die PDF-Bytes selbst bauen
+// und wie bei "Sichern" per Blob+<a download> herunterladen — das funktioniert dort
+// nachweislich schon.
+function pdfEscape(s){ return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)"); }
+const WINANSI_EXTRA = {0x2013:0x96,0x2014:0x97,0x2018:0x91,0x2019:0x92,
+  0x201C:0x93,0x201D:0x94,0x2026:0x85,0x2022:0x95};
+function toLatin1(s){
+  let out = "";
+  for (const ch of s){
+    const c = ch.codePointAt(0);
+    if (c<=255) out += String.fromCharCode(c);
+    else if (WINANSI_EXTRA[c]) out += String.fromCharCode(WINANSI_EXTRA[c]);
+    else out += "?";
+  }
+  return out;
+}
+function strToBytes(s){
+  const buf = new Uint8Array(s.length);
+  for (let i=0;i<s.length;i++) buf[i] = s.charCodeAt(i) & 0xFF;
+  return buf;
+}
+function downloadBytes(name, bytes, type){
+  const b = new Blob([bytes], {type:type});
+  const u = URL.createObjectURL(b);
+  const a = document.createElement("a");
+  a.href = u; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(u), 2000);
+}
+
+function checklistLines(){
+  const total = ALL.length, doneN = ALL.filter(i=>state.done[i.id]).length;
+  const lines = [];
+  lines.push({t:"Roter Faden — Kanal 2", size:16, gap:22});
+  lines.push({t:"Stand: "+new Date().toLocaleDateString("de-CH"), size:9, gap:11});
+  lines.push({t:doneN+" von "+total+" erledigt ("+Math.round(doneN/total*100)+"%)", size:10, gap:20});
+  PLAN.forEach(p=>{
+    const items = p.groups.flatMap(g=>g.items);
+    const c = items.filter(i=>state.done[i.id]).length;
+    lines.push({t:"Phase "+p.phase+" — "+p.title+"  ("+c+"/"+items.length+")", size:12, gap:17});
+    p.groups.forEach(g=>{
+      lines.push({t:g.title, size:10, gap:14, indent:10});
+      g.items.forEach(item=>{
+        const box = state.done[item.id] ? "[x]" : "[ ]";
+        let t = box+" "+item.id+"  "+item.t;
+        if (item.who) t += "  ("+item.who+")";
+        lines.push({t:t, size:9.5, gap:12.5, indent:16});
+        if (state.notes[item.id]){
+          state.notes[item.id].split("\n").forEach(n=>{
+            lines.push({t:"Notiz: "+n, size:8.5, gap:11, indent:28});
+          });
+        }
+        if (state.dates[item.id]){
+          lines.push({t:"Termin: "+new Date(state.dates[item.id]).toLocaleString("de-CH",
+            {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}),
+            size:8.5, gap:11, indent:28});
+        }
+      });
+    });
+  });
+  return lines;
+}
+
+function makePDF(lines){
+  const pageW=595.28, pageH=841.89, top=792, bottom=50, baseX=50;
+  let pages = [[]], y = top;
+  lines.forEach(ln=>{
+    if (y - ln.gap < bottom){ pages.push([]); y = top; }
+    pages[pages.length-1].push(Object.assign({}, ln, {y:y}));
+    y -= ln.gap;
+  });
+
+  const catalogNum=1, pagesNum=2, fontNum=3;
+  let next=4;
+  const pageNums=[], contentNums=[], contents=[];
+  pages.forEach(()=>{ pageNums.push(next++); contentNums.push(next++); });
+  pages.forEach((pageLines,i)=>{
+    let s = "";
+    pageLines.forEach(ln=>{
+      const x = baseX + (ln.indent||0);
+      s += "BT /F1 "+ln.size+" Tf "+x+" "+ln.y.toFixed(2)+" Td ("+pdfEscape(toLatin1(ln.t))+") Tj ET\n";
+    });
+    contents.push(s);
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [];
+  function addObj(str){ offsets.push(pdf.length); pdf += str; }
+
+  addObj(catalogNum+" 0 obj\n<< /Type /Catalog /Pages "+pagesNum+" 0 R >>\nendobj\n");
+  addObj(pagesNum+" 0 obj\n<< /Type /Pages /Kids ["+pageNums.map(n=>n+" 0 R").join(" ")+"] /Count "+pages.length+" >>\nendobj\n");
+  addObj(fontNum+" 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n");
+  pages.forEach((_,i)=>{
+    addObj(pageNums[i]+" 0 obj\n<< /Type /Page /Parent "+pagesNum+" 0 R /MediaBox [0 0 "+pageW+" "+pageH+"] "
+      +"/Resources << /Font << /F1 "+fontNum+" 0 R >> >> /Contents "+contentNums[i]+" 0 R >>\nendobj\n");
+    const c = contents[i];
+    addObj(contentNums[i]+" 0 obj\n<< /Length "+c.length+" >>\nstream\n"+c+"endstream\nendobj\n");
+  });
+
+  const xrefStart = pdf.length;
+  const totalObjs = offsets.length+1;
+  pdf += "xref\n0 "+totalObjs+"\n0000000000 65535 f \n";
+  offsets.forEach(off=>{ pdf += String(off).padStart(10,"0")+" 00000 n \n"; });
+  pdf += "trailer\n<< /Size "+totalObjs+" /Root "+catalogNum+" 0 R >>\nstartxref\n"+xrefStart+"\n%%EOF";
+  return pdf;
 }
 
 document.getElementById("pdf").onclick = () => {
-  // Als installierte App (Home-Bildschirm) kennt iOS keinen Druckdialog —
-  // window.print() tut dort schlicht nichts. Darum in Safari oeffnen,
-  // dort druckt es normal (Teilen > Drucken > als PDF sichern).
-  const standalone = window.navigator.standalone === true
-    || window.matchMedia("(display-mode: standalone)").matches;
-  if (standalone){
-    const a = document.createElement("a");
-    a.href = location.pathname + "?print=1";
-    a.target = "_blank";
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    return;
-  }
-  printNow();
+  const pdf = makePDF(checklistLines());
+  downloadBytes("roter-faden-"+new Date().toISOString().slice(0,10)+".pdf", strToBytes(pdf), "application/pdf");
 };
-
-if (new URLSearchParams(location.search).get("print") === "1"){
-  window.addEventListener("load", () => setTimeout(printNow, 300));
-}
 
 render();
 
