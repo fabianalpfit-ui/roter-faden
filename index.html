@@ -390,13 +390,36 @@ document.getElementById("reset").onclick = () => {
 document.getElementById("export").onclick = () => {
   download("roter-faden-sicherung.json", JSON.stringify(state, null, 2), "application/json");
 };
-document.getElementById("pdf").onclick = () => {
+function printNow(){
   const alt = document.title;
   const heute = new Date().toISOString().slice(0,10);
   document.title = "Roter Faden — Kanal 2 — " + heute;
   window.print();
   document.title = alt;
+}
+
+document.getElementById("pdf").onclick = () => {
+  // Als installierte App (Home-Bildschirm) kennt iOS keinen Druckdialog —
+  // window.print() tut dort schlicht nichts. Darum in Safari oeffnen,
+  // dort druckt es normal (Teilen > Drucken > als PDF sichern).
+  const standalone = window.navigator.standalone === true
+    || window.matchMedia("(display-mode: standalone)").matches;
+  if (standalone){
+    const a = document.createElement("a");
+    a.href = location.pathname + "?print=1";
+    a.target = "_blank";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+  printNow();
 };
+
+if (new URLSearchParams(location.search).get("print") === "1"){
+  window.addEventListener("load", () => setTimeout(printNow, 300));
+}
 
 render();
 
