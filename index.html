@@ -94,6 +94,17 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--rule);
        display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
 .done-msg{font-family:Caveat,cursive;font-size:1.6rem;color:var(--thread);margin-top:2rem}
 @media (prefers-reduced-motion:reduce){.fill{transition:none}}
+
+@media print{
+  * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{padding:0;background:#fff}
+  header{position:static;border-bottom:2px solid var(--ink)}
+  .jump, .actions, footer{display:none !important}
+  .knot{cursor:default}
+  .phase{margin-top:1.6rem; break-inside:avoid-page}
+  .item{break-inside:avoid}
+  .note-read{break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -111,6 +122,7 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--rule);
   <footer>
     <span class="count">Fortschritt bleibt auf diesem Gerät gespeichert.</span>
     <div class="row">
+      <button class="btn ghost" id="pdf">Als PDF</button>
       <button class="btn ghost" id="export">Sichern</button>
       <button class="btn ghost" id="reset">Zurücksetzen</button>
     </div>
@@ -377,6 +389,13 @@ document.getElementById("reset").onclick = () => {
 };
 document.getElementById("export").onclick = () => {
   download("roter-faden-sicherung.json", JSON.stringify(state, null, 2), "application/json");
+};
+document.getElementById("pdf").onclick = () => {
+  const alt = document.title;
+  const heute = new Date().toISOString().slice(0,10);
+  document.title = "Roter Faden — Kanal 2 — " + heute;
+  window.print();
+  document.title = alt;
 };
 
 render();
